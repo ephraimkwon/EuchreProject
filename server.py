@@ -23,6 +23,7 @@ print("Waiting for a connection...\nServer Started")
 
 # Creates a threaded client when you connect. 
 def threaded_client(conn):
+    conn.send(str.encode("Connected"))
     reply = ""
     while True:
         try:
@@ -46,4 +47,4 @@ def threaded_client(conn):
 while True:
     conn, addr = s.accept()
     print("Connected to: " , addr)
-    start_new_thread(threaded_client, (conn))
+    start_new_thread(threaded_client, (conn,))
