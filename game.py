@@ -10,9 +10,12 @@ class Game(object):
         self.deck = Euchre_Deck()
         self.team_1 = [0]
         self.team_2 = [0]
+        self.teams = [self.team_1, self.team_2]
         self.trump_suit = 0
         self.cards_in_play = []
         self.num_rounds = 0
+        self.team_1_points = 0
+        self.team_2_points = 0
     def set_up(self):
         name_1 = input("Input player 1 name: \n")
         name_2 = input("Input player 2 name: \n")
@@ -146,6 +149,8 @@ class Game(object):
         self.player_list = sorted(self.player_list, key = lambda x: x.seat_num, reverse = False)
 
     def decide_trump_top_card(self): # Deciding the trump card. Must be done after cards are dealt.
+        self.reset_dealer()
+        self.reset_called_trump()
         self.set_dealer()
         self.set_order_deal()
         top_card = self.deck[0]
@@ -178,10 +183,12 @@ class Game(object):
                     if switch_card in range(1,6):
                         break
                 player.hand.append(top_card)
+                player.called_trump = True
                 del player.hand[switch_card - 1]
                 self.deck.append(player.hand[switch_card - 1])
                 self.trump_suit = top_card.suit
                 print("The trump suit is " + top_suit + "!")
+                print("Since trump has been chosen, we can start.")
                 break
             elif answer.lower() == "n" and not player.is_dealer:
                 continue
@@ -237,6 +244,7 @@ class Game(object):
                 elif suit_call == 3:
                     suit_set ="Diamonds"
                 print(f"The trump suit is {suit_set} !")
+                print("Since trump has been chosen, we can start.")
                 break
             if response.lower() == "n" and not player.is_dealer:
                 continue
@@ -267,14 +275,27 @@ class Game(object):
                 elif suit_call == 3:
                     suit_set ="Diamonds"
                 print(f"The trump suit is {suit_set} !")
+                print("Since trump has been chosen, we can start.")
                 self.trump_suit = suit_call - 1
                 break
+    def trump_suit_getter(self, trump):
+        if trump == 0:
+            return "Spades"
+        elif trump == 1:
+            return "Hearts"
+        elif trump == 2:
+            return "Clubs"
+        elif trump == 3:
+            return "Diamonds"
     def reset_won_trick(self): # Resets every player's won_trick attribute to False.
         for player in self.player_list:
             player.won_trick = False
     def reset_dealer(self): #  Resets every player's is_dealer attribute to False
         for player in self.player_list:
             player.is_dealer = False
+    def reset_called_trump(self): # Resets every player's called_trump to False
+        for player in self.player_list:
+            player.called_trump = False
     def set_dealer(self):
         if self.num_rounds % 4 != 0:
             num = self.num_rounds % 4 - 1
@@ -284,9 +305,9 @@ class Game(object):
             original_seat_list = sorted(self.player_list, key = lambda x: x.original_seat_num, reverse = False)
             original_seat_list[3].is_dealer = True
     def play_trick(self): # One full round of Euchre is played. 
-        print("Since trump has been chosen, we can start.")
         self.set_order_deal()
         self.set_order_trick()
+        self.reset_won_trick()
         for player in self.player_list:
             valid_cards = [] # the indexes of the cards that can be put into play.
             for index, card in enumerate(player.hand):
@@ -324,36 +345,70 @@ class Game(object):
                     continue
             print("Playing: ", player.hand[card_to_play])
             self.cards_in_play.append(player.hand.pop(card_to_play))
-            self.num_rounds += 1
     
     def score_round(self): # Gives a score to whoever won the trick.
         lead_suit = self.cards_in_play[0].suit
         winning_card_index = -1
         for index,card in enumerate(self.cards_in_play):
             print(winning_card_index)
-            if card.suit == self.cards_in_play[0].suit and card.value == 2 and card.suit % 2 == self.trump_suit % 2:
+            if winning_card_index < 0:
+                winning_card_index = 0
+            elif card.suit == self.cards_in_play[0].suit and card.value == 2 and card.suit % 2 == self.trump_suit % 2:
                 continue
             elif card.suit == lead_suit:
-                if card.value > winning_card_index:
+                if card.value > self.cards_in_play[winning_card_index].value:
                     winning_card_index = index
         for index,card in enumerate(self.cards_in_play):
-            print(winning_card_index)
-            if card.suit == self.trump_suit or card.suit % 2 == self.trump_suit % 2 and card.value == 2:
-                if card.value == 2 and card.suit == self.trump_suit:
+            if card.suit == self.trump_suit:
+                print(winning_card_index)
+                if self.cards_in_play[winning_card_index].suit != self.trump_suit:
+                    winning_card_index = index
+                elif card.value == 2 and card.suit == self.trump_suit:
                     winning_card_index = index
                     break
                 elif card.value == 2 and card.suit % 2 == self.trump_suit % 2:
                     winning_card_index = index
                 else:
-                    if card.value > winning_card_index and self.cards_in_play[winning_card_index].value != 2:
+                    if card.value > self.cards_in_play[winning_card_index].value and self.cards_in_play[winning_card_index].value != 2:
                         winning_card_index = index
         winning_card = self.cards_in_play[winning_card_index]
+        print(winning_card_index)
         print("This is the winning card!" , winning_card)
         winning_player = self.player_list[winning_card_index]
         winning_player.won_trick = True
         winning_team = winning_player.team
-        teams = [self.team_1, self.team_2]
-        teams[winning_team - 1][0] += 1
+        self.teams[winning_team - 1][0] += 1
         self.cards_in_play = []
-    
+    def play_full_round(self): # Plays the full 5 rounds of Euchre and gives the score to whoever won the most tricks. 
+        self.decide_trump_top_card()
+        for i in range(5):
+            self.play_trick()
+            self.score_round()
+            print("Remember: Trump is: ", self.trump_suit_getter(self.trump_suit))
+        self.num_rounds += 1
+        self.score_full_round()
+    def score_full_round(self):
+        for player in self.player_list:
+            if player.called_trump == True:
+                trump_caller_team = self.teams[player.team - 1]
+                score_of_trump_caller = trump_caller_team[0]
+                if score_of_trump_caller < 3:
+                    if trump_caller_team == self.team_1:
+                        self.team_2_points += 2
+                    elif trump_caller_team == self.team_2:
+                        self.team_1.points += 2
+                    print("Euchred!")
+                elif 3 < score_of_trump_caller < 5:
+                    if trump_caller_team == self.team_1:
+                        self.team_1_points += 1
+                    elif trump_caller_team == self.team_2:
+                        self.team_2_points += 1
+                elif score_of_trump_caller == 5:
+                    if trump_caller_team == self.team_1:
+                        self.team_1_points += 2
+                    elif trump_caller_team == self.team_2:
+                        self.team_2_points += 2
+                    print("Sweep!")
+        print("Here are the points for Team 1: ", self.team_1_points)
+        print("Here are the points for Team 2: ", self.team_2_points)
     

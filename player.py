@@ -8,6 +8,7 @@ class Player(object):
         self.is_dealer = False
         self.seat_num = 0
         self.original_seat_num = 0
+        self.called_trump = False
     def __repr__(self):
         return self.name
     def show_hand(self):
