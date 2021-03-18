@@ -418,7 +418,7 @@ class Game(object):
                     elif trump_caller_team == self.team_2:
                         self.team_1.points += 2
                     print("Euchred!")
-                elif 3 < score_of_trump_caller < 5:
+                elif 3 <= score_of_trump_caller < 5:
                     if trump_caller_team == self.team_1:
                         self.team_1_points += 1
                     elif trump_caller_team == self.team_2:
@@ -438,3 +438,4 @@ class Game(object):
             self.play_full_round()
             if self.team_1_points > self.max_points or self.team_2_points > self.max_points:
                 self.game_over = True
+            self.deck = Euchre_Deck()
