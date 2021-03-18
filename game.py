@@ -16,11 +16,24 @@ class Game(object):
         self.num_rounds = 0
         self.team_1_points = 0
         self.team_2_points = 0
+        self.max_points = 0
     def set_up(self):
         name_1 = input("Input player 1 name: \n")
         name_2 = input("Input player 2 name: \n")
         name_3 = input("Input player 3 name: \n")
         name_4 = input("Input player 4 name: \n")
+        while True:
+            try:
+                max_points = int(input("Input the points you want to play to: (5-10) \n"))
+            except:
+                print("Please input a valid int.")
+                continue
+            if max_points > 10 or max_points < 5:
+                print("Please input a number between 5-10")
+                continue
+            else:
+                self.max_points = max_points
+                break
         p1 = Player(name_1)
         p2 = Player(name_2)
         p3 = Player(name_3)
@@ -276,7 +289,7 @@ class Game(object):
                     suit_set ="Diamonds"
                 print(f"The trump suit is {suit_set} !")
                 print("Since trump has been chosen, we can start.")
-                self.trump_suit = suit_call - 1
+                self.trump_suit = suit_call
                 break
     def trump_suit_getter(self, trump):
         if trump == 0:
@@ -311,9 +324,15 @@ class Game(object):
         for player in self.player_list:
             valid_cards = [] # the indexes of the cards that can be put into play.
             for index, card in enumerate(player.hand):
-                if len(self.cards_in_play) > 0:
+                if len(self.cards_in_play) > 0: 
+                    # This makes sure that if the leading card is the left bower, then only trumps are valid. 
+                    if self.cards_in_play[0].value == 2 and self.cards_in_play[0].suit % 2 == self.trump_suit % 2 and self.cards_in_play[0].suit != self.trump_suit:
+                        for index, card in enumerate(player.hand):
+                            if card.suit == self.trump_suit:
+                                valid_cards.append(index)
+                        break
                     # This makes sure left bower is valid when the leading card is a trump suit card.
-                    if card.value == 2 and card.suit % 2 == self.trump_suit % 2 and self.cards_in_play[0].suit == self.trump_suit:
+                    elif card.value == 2 and card.suit % 2 == self.trump_suit % 2 and self.cards_in_play[0].suit == self.trump_suit:
                         valid_cards.append(index)
                     # This checks that left bower is not valid if the leading card matches left bower suit.
                     elif card.suit == self.cards_in_play[0].suit and card.value == 2 and card.suit % 2 == self.trump_suit % 2:
@@ -359,7 +378,7 @@ class Game(object):
                 if card.value > self.cards_in_play[winning_card_index].value:
                     winning_card_index = index
         for index,card in enumerate(self.cards_in_play):
-            if card.suit == self.trump_suit:
+            if card.suit == self.trump_suit or (card.suit % 2 == self.trump_suit % 2 and card.value == 2):
                 print(winning_card_index)
                 if self.cards_in_play[winning_card_index].suit != self.trump_suit:
                     winning_card_index = index
@@ -392,6 +411,7 @@ class Game(object):
             if player.called_trump == True:
                 trump_caller_team = self.teams[player.team - 1]
                 score_of_trump_caller = trump_caller_team[0]
+                print(score_of_trump_caller)
                 if score_of_trump_caller < 3:
                     if trump_caller_team == self.team_1:
                         self.team_2_points += 2
@@ -411,4 +431,10 @@ class Game(object):
                     print("Sweep!")
         print("Here are the points for Team 1: ", self.team_1_points)
         print("Here are the points for Team 2: ", self.team_2_points)
-    
+
+    def play(self):
+        while self.game_over == False:
+            self.deal_cards()
+            self.play_full_round()
+            if self.team_1_points > self.max_points or self.team_2_points > self.max_points:
+                self.game_over = True
