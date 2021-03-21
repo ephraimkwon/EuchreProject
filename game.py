@@ -18,7 +18,7 @@ class Game(object):
         self.team_2_points = 0
         self.max_points = 0
     def set_up(self):
-        name_1 = input("Input player 1 name: \n")
+        name_1 = input("Input player 1 name: \n") 
         name_2 = input("Input player 2 name: \n")
         name_3 = input("Input player 3 name: \n")
         name_4 = input("Input player 4 name: \n")
@@ -57,8 +57,35 @@ class Game(object):
         p3.original_seat_num = 2
         p4.seat_num = 3
         p4.original_seat_num = 3
-    
-    
+    def set_up2(self):
+        name_1 = input("Input player 1 name: \n")
+        name_2 = input("Input player 2 name: \n")
+        name_3 = input("Input player 3 name: \n")
+        name_4 = input("Input player 4 name: \n")
+        p1 = Player(name_1)
+        p2 = Player(name_2)
+        p3 = Player(name_3)
+        p4 = Player(name_4)
+        self.team_1.append(p1)
+        p1.team = 1
+        self.team_1.append(p3)
+        p3.team = 1
+        self.team_2.append(p2)
+        p2.team = 2
+        self.team_2.append(p4)
+        p4.team = 2
+        player_list = [p2,p3,p4,p1]
+        for player in player_list:
+            self.player_list.append(player)
+        p1.seat_num = 4
+        p1.original_seat_num = 4
+        p2.seat_num = 1
+        p2.original_seat_num = 1
+        p3.seat_num = 2
+        p3.original_seat_num = 2
+        p4.seat_num = 3
+        p4.original_seat_num = 3
+
     def deal_cards(self):
         self.deck.shuffle()
         for player in self.player_list:

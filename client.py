@@ -1,8 +1,14 @@
 from game import *
 from player import *
 from cards import *
+from network import Network
 
-name = input("Enter your username")
+def main():
+    run = True
+    n = Network()
+    game = Game()
+    name = input("Input a name \n")
+    player = Player(name)
+    n.send(name)
 
-player = Player(name)
-game = Game()
+main()
