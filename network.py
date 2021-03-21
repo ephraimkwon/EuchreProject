@@ -24,3 +24,5 @@ class Network:
         except socket.error as e:
             print(e)
         
+n = Network()
+n.send("Fuck you")

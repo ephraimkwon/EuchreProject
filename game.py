@@ -57,6 +57,8 @@ class Game(object):
         p3.original_seat_num = 2
         p4.seat_num = 3
         p4.original_seat_num = 3
+    
+    
     def deal_cards(self):
         self.deck.shuffle()
         for player in self.player_list:
@@ -187,21 +189,25 @@ class Game(object):
                 else:
                     break
             if answer.lower() == "y":
-                while True:
-                    try:
-                        switch_card = int(input("Which card would you like to switch?: (Input Number) \n"))
-                    except:
-                        print("Please input a number corresponding to the card you'd like to switch.")
-                        continue
-                    if switch_card in range(1,6):
+                for player in self.player_list:
+                    if player.is_dealer == True:
+                        player.show_hand()                                
+                        while True:
+                            try:
+                                switch_card = int(input("Which card would you like to switch?: (Input Number) \n"))
+                            except:
+                                print("Please input a number corresponding to the card you'd like to switch.")
+                                continue
+                            if switch_card in range(1,6):
+                                break
+                        player.hand.append(top_card)
+                        player.called_trump = True
+                        del player.hand[switch_card - 1]
+                        self.deck.append(player.hand[switch_card - 1])
+                        self.trump_suit = top_card.suit
+                        print("The trump suit is " + top_suit + "!")
+                        print("Since trump has been chosen, we can start.")
                         break
-                player.hand.append(top_card)
-                player.called_trump = True
-                del player.hand[switch_card - 1]
-                self.deck.append(player.hand[switch_card - 1])
-                self.trump_suit = top_card.suit
-                print("The trump suit is " + top_suit + "!")
-                print("Since trump has been chosen, we can start.")
                 break
             elif answer.lower() == "n" and not player.is_dealer:
                 continue
@@ -246,6 +252,7 @@ class Game(object):
                         continue
                     else:
                         break
+                player.called_trump = True
                 self.trump_suit = suit_call
                 suit_set = -1
                 if suit_call == 0:
@@ -289,6 +296,7 @@ class Game(object):
                     suit_set ="Diamonds"
                 print(f"The trump suit is {suit_set} !")
                 print("Since trump has been chosen, we can start.")
+                player.called_trump = True
                 self.trump_suit = suit_call
                 break
     def trump_suit_getter(self, trump):
@@ -431,6 +439,8 @@ class Game(object):
                     print("Sweep!")
         print("Here are the points for Team 1: ", self.team_1_points)
         print("Here are the points for Team 2: ", self.team_2_points)
+        self.team_1[0] = 0
+        self.team_2[0] = 0
 
     def play(self):
         while self.game_over == False:
@@ -438,4 +448,5 @@ class Game(object):
             self.play_full_round()
             if self.team_1_points > self.max_points or self.team_2_points > self.max_points:
                 self.game_over = True
+            self.deck = []
             self.deck = Euchre_Deck()
