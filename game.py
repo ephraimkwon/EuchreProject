@@ -57,15 +57,11 @@ class Game(object):
         p3.original_seat_num = 2
         p4.seat_num = 3
         p4.original_seat_num = 3
-    def set_up2(self):
-        name_1 = input("Input player 1 name: \n")
-        name_2 = input("Input player 2 name: \n")
-        name_3 = input("Input player 3 name: \n")
-        name_4 = input("Input player 4 name: \n")
-        p1 = Player(name_1)
-        p2 = Player(name_2)
-        p3 = Player(name_3)
-        p4 = Player(name_4)
+    def set_up_online(self, player_name_list):
+        p1 = Player(player_name_list[3])
+        p2 = Player(player_name_list[0])
+        p3 = Player(player_name_list[1])
+        p4 = Player(player_name_list[2])
         self.team_1.append(p1)
         p1.team = 1
         self.team_1.append(p3)

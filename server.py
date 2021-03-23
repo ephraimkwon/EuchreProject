@@ -1,49 +1,101 @@
 import socket
-from _thread import *
-import sys
-from game import *
-# The local ip address the machine that is hosting the server is on
-server = socket.gethostname()
+import threading
+from game_online import *
 
-# Safe port number to use.
+game = Game()
+
+host = socket.gethostbyname(socket.gethostname())
+
 port = 5555
 
-# Type of socket. Sock stream is how the server string that comes into the server. 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Binds the server and port to the socket.
 try:
-    s.bind((server, port))
-except socket.error as e:
-    str(e)
+    server.bind((host,port))
+except Exception as e:
+    print(e)
 
-# Number of client connections to the server. 4 because Euchre needs 4 players. Opens up the port.
-s.listen(4)
-print("Waiting for a connection...\nServer Started")
+server.listen(4)
 
-player_list_names = []
+clients = []
+names = []
+messages = []
 
-# Creates a threaded client when you connect. 
-def threaded_client(conn, player):
-    conn.send(str.encode("Your seat number is: " + str(original_seat_num)))
-    reply = ""
-    try:
-        data = conn.recv(2048) # number of information we are receiving
-        reply = data.decode("utf-8") # The encoding standard (utf-8)
-        print("Received: ", reply)
-        player_list_names.append(reply)
-        print(player_list_names)
-        conn.sendall(str.encode(reply)) # Encodes the string reply into bytes object
-    except Exception as e:
-        print(e)
-        print("Lost connection") # If any erros occur, it will close the connection. 
-        conn.close()
+def broadcast(message):
+    for client in clients:
+        client.send(message)
 
-# Continuosly looks for connections and starts a threaded client.
-original_seat_num = 0
-while True:
-    conn, addr = s.accept()
-    original_seat_num += 1
-    print("Connected to: " , addr)
-    start_new_thread(threaded_client, (conn, original_seat_num))
+# if message.decode('utf-8') == "eph: test":
+#   clients[0].send(str.encode("Fuck"))
 
+def handle(client):
+    while True:
+        try:
+            message = client.recv(1024)
+            if len(clients) == 4:
+                broadcast(str.encode("Let's begin!\n Setting up players..."))
+                game.set_up(names)
+                for client in clients:
+                    game_thread = threading.Thread(target = start_game, args = (client,))
+                    game_thread.start()
+                break
+                
+            elif message.decode('utf-8') == "a: test":
+                print("Interesting")
+                for client in clients:
+                    game_thread = threading.Thread(target = start_game, args = (client,))
+                    game_thread.start()
+                game.set_up(names)
+                break
+            else:
+                broadcast(message)
+        except Exception as e:
+            print(e)
+            index = clients.index(client)
+            clients.remove(client)
+            name = names[index]
+            broadcast(f"{name} has left the game.".encode('utf-8'))
+            names.remove(name)
+            client.close()
+            print(str(len(clients))+ "/4 players are in")
+            break
+
+def start_game(client):
+    while True:
+        try:
+            message = client.recv(1024)
+            broadcast(message)
+        except Exception as e:
+            print(e)
+            index = clients.index(client)
+            clients.remove(client)
+            name = names[index]
+            broadcast(f"{name} has left the game.".encode('utf-8'))
+            names.remove(name)
+            client.close()
+            print(str(len(clients))+ "/4 players are in")
+            break
+
+
+def receive():
+    while len(clients) < 5:
+        conn, address = server.accept()
+        print("Connected to ", address)
+        
+        conn.send(str.encode("NAME"))
+        name = conn.recv(1024).decode('utf-8')
+        names.append(name)
+        clients.append(conn)
+
+        broadcast(f"{name} has joined the game!".encode('utf-8'))
+        print(str(len(clients))+ "/4 players are in")
+        conn.send(f"Connected to server\n You are player {len(clients)}".encode("utf-8"))
+        if len(clients) == 4:
+            broadcast(str.encode("Chatting over! Time to start the game."))
+        thread = threading.Thread(target = handle, args = (conn,))
+        thread.start()
+
+
+print("Server started. Waiting for connections...")
+
+receive()

@@ -1,14 +1,39 @@
-from game import *
-from player import *
-from cards import *
-from network import Network
+import socket
+import threading
 
-def main():
+host = socket.gethostbyname(socket.gethostname())
+
+port = 5555
+
+name = input("Input your name: \n")
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+client.connect((host, port))
+
+def receive():
     while True:
-        n = Network()
-        name = input("Input your name \n")
-        n.send(name)
-        reply = n.listen()
+        try:
+            message = client.recv(1024).decode("utf-8")
+            if message == "NAME":
+                client.send(name.encode('utf-8'))
+            elif len(message) < 2:
+                continue
+            else:
+                print(message)
+        except Exception as e:
+            print(e)
+            client.close()
+            break
 
-main()
-    
+def write():
+    while True:    
+        message = f"{name}: {input()}"
+        client.send(message.encode('utf-8'))
+
+
+recieve_thread = threading.Thread(target = receive)
+
+write_thread = threading.Thread(target = write)
+
+recieve_thread.start()
+write_thread.start()
