@@ -4,11 +4,11 @@ from cards import *
 from network import Network
 
 def main():
-    run = True
-    n = Network()
-    game = Game()
-    name = input("Input a name \n")
-    player = Player(name)
-    n.send(name)
+    while True:
+        n = Network()
+        name = input("Input your name \n")
+        n.send(name)
+        reply = n.listen()
 
 main()
+    

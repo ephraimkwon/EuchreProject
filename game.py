@@ -97,98 +97,24 @@ class Game(object):
                 if player.original_seat_num == 4:
                     player.seat_num = 1
                     for player in self.player_list:
-                        if player.original_seat_num == 4:
-                            pass
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 3
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 4
-                elif player.original_seat_num == 1:
-                    player.seat_num = 1
-                    for player in self.player_list:
-                        if player.original_seat_num == 1:
-                            pass
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 3
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 4
-                elif player.original_seat_num == 2:
-                    player.seat_num = 1
-                    for player in self.player_list:
-                        if player.original_seat_num == 2:
-                            pass
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 3
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 4
-                elif player.original_seat_num == 3:
-                    player.seat_num = 1
-                    for player in self.player_list:
-                        if player.original_seat_num == 3:
-                            pass
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 3
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 4      
+                        if player.original_seat_num != 4:
+                            player.seat_num = player.original_seat_num + 1 
         # Sets the order of the player list based on the seat number. 
-        self.player_list = sorted(self.player_list, key = lambda x: x.seat_num, reverse = False)
+        self.player_list.sort(key = lambda x: x.seat_num, reverse = False)
     def set_order_deal(self): # Sets the order turns based on who the dealer is.
         for player in self.player_list:
             if player.is_dealer == True:
-                if player.original_seat_num == 4:
-                    player.seat_num = 4
-                    for player in self.player_list:
-                        if player.original_seat_num == 4:
-                            pass
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 1
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 3
-                elif player.original_seat_num == 1:
-                    player.seat_num = 4
-                    for player in self.player_list:
-                        if player.original_seat_num == 1:
-                            pass
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 1
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 3
-                elif player.original_seat_num == 2:
-                    player.seat_num = 4
-                    for player in self.player_list:
-                        if player.original_seat_num == 2:
-                            pass
-                        elif player.original_seat_num == 3:
-                            player.seat_num = 1
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 3
-                elif player.original_seat_num == 3:
-                    player.seat_num = 4
-                    for player in self.player_list:
-                        if player.original_seat_num == 3:
-                            pass
-                        elif player.original_seat_num == 4:
-                            player.seat_num = 1
-                        elif player.original_seat_num == 1:
-                            player.seat_num = 2
-                        elif player.original_seat_num == 2:
-                            player.seat_num = 3      
+                for i in range(1, 5):
+                    if player.original_seat_num == i:
+                        player.seat_num = 4
+                        for other in self.player_list:
+                            if other.original_seat_num != i:
+                                other.seat_num = other.original_seat_num
+                                if i != 4: 
+                                    other.seat_num -= i
+                                    other.seat_num %= 4 #loop back to remain 1-4 and not get a negative number
         # Sets the order of the player list based on the seat number. 
-        self.player_list = sorted(self.player_list, key = lambda x: x.seat_num, reverse = False)
+        self.player_list.sort(key = lambda x: x.seat_num, reverse = False)
 
     def decide_trump_top_card(self): # Deciding the trump card. Must be done after cards are dealt.
         self.reset_dealer()
@@ -415,7 +341,7 @@ class Game(object):
         for index,card in enumerate(self.cards_in_play):
             if card.suit == self.trump_suit or (card.suit % 2 == self.trump_suit % 2 and card.value == 2):
                 print(winning_card_index)
-                if self.cards_in_play[winning_card_index].suit != self.trump_suit:
+                if self.cards_in_play[winning_card_index].suit != self.trump_suit and not (self.cards_in_play[winning_card_index].value == 2 and self.cards_in_play[winning_card_index].suit % 2 == self.trump_suit):
                     winning_card_index = index
                 elif card.value == 2 and card.suit == self.trump_suit:
                     winning_card_index = index
@@ -470,7 +396,7 @@ class Game(object):
         self.team_2[0] = 0
 
     def play(self):
-        while self.game_over == False:
+        while not self.game_over:
             self.deal_cards()
             self.play_full_round()
             if self.team_1_points > self.max_points or self.team_2_points > self.max_points:
