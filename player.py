@@ -17,3 +17,8 @@ class Player(object):
         for card in self.hand:
             count += 1
             print(str(count)+  ": " , card)
+    def return_hand(self):
+        hand = ""
+        for index, card in enumerate(self.hand):
+            hand = hand + f"{index + 1}: {card}\n"
+        return hand

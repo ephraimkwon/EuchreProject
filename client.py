@@ -1,6 +1,6 @@
 import socket
 import threading
-
+import time
 host = socket.gethostbyname(socket.gethostname())
 
 port = 5555
@@ -16,6 +16,8 @@ def receive():
             message = client.recv(1024).decode("utf-8")
             if message == "NAME":
                 client.send(name.encode('utf-8'))
+            elif message == "REPLY":
+                send_once()
             elif len(message) < 2:
                 continue
             else:
@@ -29,6 +31,12 @@ def write():
     while True:    
         message = f"{name}: {input()}"
         client.send(message.encode('utf-8'))
+
+def send_once():
+    print("You got a message!")
+    message = f"{name}: {input()}"
+    client.send(message.encode('utf-8'))
+
 
 
 recieve_thread = threading.Thread(target = receive)

@@ -21,6 +21,30 @@ class Game(object):
         self.team_2_points = 0
         self.max_points = 0
 
+    def set_up_test(self, player_name_list):
+        p1 = Player("Alex")
+        p2 = Player(player_name_list[0])
+        p3 = Player(player_name_list[1])
+        p4 = Player("Joe")
+        self.team_1.append(p1)
+        p1.team = 1
+        self.team_1.append(p3)
+        p3.team = 1
+        self.team_2.append(p2)
+        p2.team = 2
+        self.team_2.append(p4)
+        p4.team = 2
+        player_list = [p2,p3,p4,p1]
+        for player in player_list:
+            self.player_list.append(player)
+        p1.seat_num = 4
+        p1.original_seat_num = 4
+        p2.seat_num = 1
+        p2.original_seat_num = 1
+        p3.seat_num = 2
+        p3.original_seat_num = 2
+        p4.seat_num = 3
+        p4.original_seat_num = 3
     def set_up(self, player_name_list):
         p1 = Player(player_name_list[3])
         p2 = Player(player_name_list[0])
@@ -76,7 +100,15 @@ class Game(object):
         # Sets the order of the player list based on the seat number. 
         self.player_list.sort(key = lambda x: x.seat_num, reverse = False)
 
- 
+    def get_top_card(self):
+        top_card = self.deck[0]
+        return top_card
+    
+    def ask_player_message(self, message):
+        answer = input(message)
+        return answer
+    
+    
         
     def decide_trump_top_card(self): # Deciding the trump card. Must be done after cards are dealt.
         self.reset_dealer()
