@@ -108,7 +108,6 @@ class Game(object):
         answer = input(message)
         return answer
     
-    
         
     def decide_trump_top_card(self): # Deciding the trump card. Must be done after cards are dealt.
         self.reset_dealer()

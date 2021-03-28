@@ -9,6 +9,10 @@ host = socket.gethostbyname(socket.gethostname())
 
 port = 5555
 
+standard = "utf-8"
+
+suit_dict = {0: "Spades", 1: "Hearts", 2: "Clubs", 3: "Diamonds"}
+
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
@@ -75,28 +79,56 @@ def start_game():
         player_list[i] += (clients[i],names[i],game.player_list[i]) # a master list of all the important variables
     while not game.game_over:
         try:
+            game.set_dealer()
+            set_order_deal(player_list)
+            set_order_trick(player_list)
             broadcast(str.encode(f'{game.get_top_card()}'))
             for client, name, player in player_list:
                 while True:
+                    client.send(str.encode(player.return_hand()))
                     client.send(str.encode("Press enter, then answer.\n"))
                     client.send(str.encode("Would you like to make top card trump? (Y/N)\n"))
                     message = client.recv(1024)
-                    if message.decode("utf-8") == f"{name}: y" or message.decode("utf-8") == f"{name}: n":
+                    if message.decode("utf-8").lower() == f"{name}: y" or message.decode("utf-8").lower() == f"{name}: n":
                         break
                     else:
                         client.send(str.encode("Please input either a y or n."))  
                         continue
                     break
-                if message.decode('utf-8').lower() == f"{name}: n":
-                    client.send(str.encode("Received.\n"))
+                if message.decode('utf-8').lower() == f"{name}: y":
+                    broadcast(str.encode(f"{name} has chosen trump."))
+                    for client, name, player in player_list:
+                        print(player.is_dealer)
+                        if player.is_dealer:
+                            client.send(str.encode(player.return_hand()))
+                            client.send(str.encode("Which card would you like to switch? (Input a number)\n"))
+                            reply = client.recv(1024)
+                            answer = reply.decode(standard)[-1]
+                            while True:
+                                try:
+                                    switch_card = int(answer) - 1
+                                except:
+                                    client.send(str.encode("Please input a number.\n"))
+                                if switch_card in range(5):
+                                    break
+                            player.hand.append(game.deck[0])
+                            player.called_trump = True
+                            del player.hand[switch_card]
+                            game.trump_suit = game.deck[0].suit
+                            player.show_hand()
+                            broadcast(str.encode(f"The trump suit is {suit_dict[game.deck[0].suit]}"))
+                            break
+                    break
+                elif message.decode(standard).lower() == f"{name}: n" and not player.is_dealer:
                     continue
-                else:
+                elif message.decode(standard).lower() == f"{name}: n" and player.is_dealer:
                     pass
             print("finished")
             break
         except Exception as e:
             print(e)
             break
+
 
 def set_order_deal(player_list):
     for client, name, player in player_list:
