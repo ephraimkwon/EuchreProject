@@ -75,6 +75,7 @@ def start_game():
     while not game.game_over:
         try:
             decide_trump_card()
+            break
         except Exception as e:
             print(e)
             break
@@ -102,16 +103,20 @@ def decide_trump_card():
                 print(player.is_dealer)
                 if player.is_dealer:
                     client.send(str.encode(player.return_hand()))
-                    client.send(str.encode("Which card would you like to switch? (Input a number)\n"))
-                    reply = client.recv(1024)
-                    answer = reply.decode(standard)[-1]
                     while True:
                         try:
+                            client.send(str.encode("Which card would you like to switch? (Input a number)\n"))
+                            reply = client.recv(1024)
+                            answer = reply.decode(standard)[-1]
                             switch_card = int(answer) - 1
                         except:
                             client.send(str.encode("Please input a number.\n"))
+                            continue
                         if switch_card in range(5):
                             break
+                        else:
+                            client.send(str.encode("Please input a number.\n"))
+                            continue
                     player.hand.append(game.deck[0])
                     player.called_trump = True
                     del player.hand[switch_card]
@@ -123,6 +128,7 @@ def decide_trump_card():
         elif message.decode(standard).lower() == f"{name}: n" and not player.is_dealer:
             continue
         elif message.decode(standard).lower() == f"{name}: n" and player.is_dealer:
+            pass
             decide_trump_no_card()
         print("finished")
         break
@@ -140,25 +146,26 @@ def decide_trump_no_card():
                 break
             else:
                 client.send(str.encode("Please input either y or n."))
-                #continue
+                continue
             break
         if message.decode(standard).lower() == f"{name}: y":
             broadcast(str.encode(f"{name} has chosen trump!"))
-            client.send(str.encode("What suit would you like to be trump?\n"))
             client.send(str.encode("Suits are:\n 1: Spades \n 2: Hearts \n 3: Clubs \n 4: Diamonds"))
-            reply = client.recv(1024)
-            answer = reply.decode(standard)[-1]
             while True:
                 try:
+                    client.send(str.encode("What suit would you like to be trump?\n"))
+                    reply = client.recv(1024)
+                    answer = reply.decode(standard)[-1]
                     trump_num = int(answer) - 1
                 except:
                     client.send(str.encode("Please input a number 1-4.\n"))
+                    continue
                 if trump_num == game.deck[0].suit:
                     client.send(str.encode("This is an invalid suit. Please chose a different suit.\n"))
-                    #continue
+                    continue
                 elif trump_num not in range(4):
                     client.send(str.encode("Please input a number 1-4.\n"))
-                    #continue
+                    continue
                 else:
                     break
             player.called_trump = True
@@ -168,16 +175,17 @@ def decide_trump_no_card():
         if message.decode(standard).lower() == f"{name}: n" and not player.is_dealer:
             continue
         elif message.decode(standard).lower() == f"{name}: n" and player.is_dealer:
-            client.send(str.encode("You just got screwed! You must choose the trump suit."))
-            client.send(str.encode("What suit would you like to be trump?\n"))
+            client.send(str.encode("You just got screwed! You must choose the trump suit."))       
             client.send(str.encode("Suits are:\n 1: Spades \n 2: Hearts \n 3: Clubs \n 4: Diamonds"))
-            reply = client.recv(1024)
-            answer = reply.decode(standard)[-1]
             while True:
                 try:
+                    client.send(str.encode("What suit would you like to be trump?\n"))
+                    reply = client.recv(1024)
+                    answer = reply.decode(standard)[-1]                    
                     trump_num = int(answer) - 1
                 except:
                     client.send(str.encode("Please input a number 1-4.\n"))
+                    continue
                 if trump_num == game.deck[0].suit:
                     client.send(str.encode("This is an invalid suit. Please chose a different suit.\n"))
                     continue
