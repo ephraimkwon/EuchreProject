@@ -16,9 +16,9 @@ def receive():
             message = client.recv(1024).decode("utf-8")
             if message == "NAME":
                 client.send(name.encode('utf-8'))
-            elif message == "REPLY":
-                send_once()
-            elif len(message) < 2:
+            elif message == "TURN":
+                client.send(str.encode("AYO"))
+            elif message[-2] == ":":
                 continue
             else:
                 print(message)
@@ -32,10 +32,6 @@ def write():
         message = f"{name}: {input()}"
         client.send(message.encode('utf-8'))
 
-def send_once():
-    print("You got a message!")
-    message = f"{name}: {input()}"
-    client.send(message.encode('utf-8'))
 
 
 

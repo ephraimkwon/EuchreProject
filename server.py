@@ -36,7 +36,6 @@ def broadcast(message):
 def handle(client):
     while True:
         try:
-            message = client.recv(1024)
             if len(clients) == 5:
                 broadcast(str.encode("Let's begin!\nSetting up players..."))
                 game.set_up(names)
@@ -47,15 +46,17 @@ def handle(client):
                     game_thread.start()
                 break
                 
-            elif message.decode('utf-8') == "a: test":
-                print("Interesting")
-                broadcast(str.encode("Let's begin!\nSetting up players..\nCards have been dealt! Here is your top card:\n"))
-                game.set_up_test(names)
-                game.deal_cards()
-                start_game()
+            elif len(clients) == 4:
+                message = clients[0].recv(1024)
+                if message.decode(standard) == f"{names[0]}: start":
+                    clients[0].send(str.encode("Initialize everyone by pressing enter 3 times\nThen, enter your answer"))
+                    broadcast(str.encode("Let's begin!\nSetting up players..\nCards have been dealt! Here is your top card:\n"))
+                    game.set_up_test(names)
+                    game.deal_cards()
+                    start_game()
                 break
             else:
-                broadcast(message)
+                pass
         except Exception as e:
             print(e)
             index = clients.index(client)
@@ -79,7 +80,7 @@ def start_game():
         except Exception as e:
             print(e)
             break
-        
+
 def decide_trump_card():
     game.set_dealer()
     set_order_deal(player_list)
@@ -88,7 +89,6 @@ def decide_trump_card():
     for client, name, player in player_list:
         while True:
             client.send(str.encode(player.return_hand()))
-            client.send(str.encode("Press enter, then answer.\n"))
             client.send(str.encode("Would you like to make top card trump? (Y/N)\n"))
             message = client.recv(1024)
             if message.decode("utf-8").lower() == f"{name}: y" or message.decode("utf-8").lower() == f"{name}: n":
@@ -132,6 +132,7 @@ def decide_trump_card():
             decide_trump_no_card()
         print("finished")
         break
+
 
 def decide_trump_no_card():
     set_order_deal(player_list)
@@ -228,14 +229,13 @@ def receive():
     while len(clients) < 5:
         conn, address = server.accept()
         print("Connected to ", address)
-        
         conn.send(str.encode("NAME"))
         name = conn.recv(1024).decode('utf-8')
         names.append(name)
         clients.append(conn)
-
         broadcast(f"{name} has joined the game!".encode('utf-8'))
         print(str(len(clients))+ "/4 players are in")
+
         conn.send(f"Connected to server\n You are player {len(clients)}".encode("utf-8"))
         if len(clients) == 4:
             broadcast(str.encode("Chatting over! Time to start the game."))
