@@ -45,7 +45,6 @@ def handle(client):
                     game_thread = threading.Thread(target = start_game, args = (client,))
                     game_thread.start()
                 break
-                
             elif len(clients) == 4:
                 message = clients[0].recv(1024)
                 if message.decode(standard) == f"{names[0]}: start":
@@ -133,7 +132,6 @@ def decide_trump_card():
         print("finished")
         break
 
-
 def decide_trump_no_card():
     set_order_deal(player_list)
     broadcast(str.encode(f"The trump suit {suit_dict[game.deck[0].suit]} is now an invalid trump suit!"))
@@ -200,6 +198,35 @@ def decide_trump_no_card():
             broadcast(str.encode(f"The trump suit is {suit_dict[trump_num]}!"))
             break
 
+def play_trick():
+    set_order_deal()
+    set_order_trick()
+    game.reset_won_trick()
+    for client, name, player in player_list:
+        for player in game.player_list:
+            valid_cards = [] # the indexes of the cards that can be put into play.
+            for index, card in enumerate(player.hand):
+                if len(game.cards_in_play) > 0: 
+                    # This makes sure that if the leading card is the left bower, then only trumps are valid. 
+                    if game.cards_in_play[0].value == 2 and game.cards_in_play[0].suit % 2 == game.trump_suit % 2 and game.cards_in_play[0].suit != game.trump_suit:
+                        for index, card in enumerate(player.hand):
+                            if card.suit == game.trump_suit:
+                                valid_cards.append(index)
+                        break
+                    # This makes sure left bower is valid when the leading card is a trump suit card.
+                    elif card.value == 2 and card.suit % 2 == game.trump_suit % 2 and game.cards_in_play[0].suit == game.trump_suit:
+                        valid_cards.append(index)
+                    # This checks that left bower is not valid if the leading card matches left bower suit.
+                    elif card.suit == game.cards_in_play[0].suit and card.value == 2 and card.suit % 2 == game.trump_suit % 2:
+                        continue
+                    elif card.suit == game.cards_in_play[0].suit:
+                        valid_cards.append(index)
+                if len(game.cards_in_play) == 0:
+                    valid_cards.append(index)
+            for index, card in enumerate(player.hand):
+                if len(valid_cards) == 0:
+                    for i in range(len(player.hand)):
+                        valid_cards.append(i)
 
 def set_order_deal(player_list):
     for client, name, player in player_list:
